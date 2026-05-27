@@ -258,7 +258,7 @@ async function callClaude(input, language, mode, attempt = 0) {
     temperature: attempt === 0 ? 0.3 : 0,
     system: SYSTEM_PROMPT,
     messages,
-  });
+  }, { timeout: 55_000 }); // 55 s — client AbortController fires at 60 s
 
   // When we prefilled with "{", prepend it back before parsing
   const text = msg.content[0]?.text ?? '';

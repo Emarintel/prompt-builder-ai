@@ -26,12 +26,15 @@ import { AIResponse, Language, HistoryItem, QualityScore, PromptMode } from './t
 
 function parseErrorMessage(err: unknown): string {
   if (!(err instanceof Error)) return 'Something went wrong. Please try again.';
+  if (err.name === 'AbortError') return 'Request timed out (>60 s). Please try again.';
   const msg = err.message.toLowerCase();
   if (msg.includes('api key') || msg.includes('authentication'))
     return 'API key is invalid or missing. Please check server configuration.';
   if (msg.includes('rate limit') || msg.includes('429') || msg.includes('overloaded'))
     return 'Server is busy. Please wait a moment and try again.';
-  if (msg.includes('timeout') || msg.includes('network') || msg.includes('fetch'))
+  if (msg.includes('timed out') || msg.includes('timeout'))
+    return 'The AI took too long to respond. Please try again.';
+  if (msg.includes('network') || msg.includes('fetch') || msg.includes('failed to fetch'))
     return 'Network error. Please check your connection and try again.';
   return err.message;
 }
