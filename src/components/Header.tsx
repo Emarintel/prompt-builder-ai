@@ -26,40 +26,45 @@ export function Header({
   return (
     <header
       className="sticky top-0 z-40 border-b border-gray-200/60 dark:border-gray-800/60
-        bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl"
+        bg-white/85 dark:bg-gray-900/85 backdrop-blur-xl"
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
 
-        {/* Logo + Branding */}
-        <div className="flex items-center gap-3">
+        {/* ── Branding ── */}
+        <div className={`flex items-center gap-3.5 ${isRtl ? 'flex-row-reverse' : ''}`}>
           <img
             src="/emarintel-logo.png"
             alt="Emarintel"
-            className="h-8 w-auto shrink-0 object-contain"
+            className="h-12 w-auto shrink-0 object-contain"
           />
-          <div className="leading-none">
-            <div>
-              <span className="text-sm font-bold text-gray-900 dark:text-white tracking-tight">
-                Prompt
+          <div className={`flex flex-col gap-1 ${isRtl ? 'items-end' : 'items-start'}`}>
+            {/* App name */}
+            <div className="flex items-baseline gap-1 leading-none">
+              <span className="text-[15px] font-bold text-gray-900 dark:text-white tracking-tight">
+                PromptBuilder
               </span>
               <span
-                className="text-sm font-bold bg-gradient-to-r from-indigo-500 to-violet-500
-                  bg-clip-text text-transparent ms-1"
+                className="text-[15px] font-bold bg-gradient-to-r from-indigo-500 to-violet-500
+                  bg-clip-text text-transparent"
               >
-                Builder
-              </span>
-              <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 ms-1">
                 AI
               </span>
             </div>
-            <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 leading-none">
+            {/* Brand badge */}
+            <span
+              className="inline-flex items-center px-1.5 py-0.5 rounded-md leading-none
+                text-[10px] font-semibold tracking-wide
+                bg-indigo-50 dark:bg-indigo-950/60
+                text-indigo-500 dark:text-indigo-400
+                border border-indigo-100 dark:border-indigo-900/60"
+            >
               by Emarintel
-            </p>
+            </span>
           </div>
         </div>
 
-        {/* Controls */}
+        {/* ── Controls ── */}
         <div className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
           {/* Language toggle */}
           <button
@@ -93,7 +98,6 @@ export function Header({
             )}
           </button>
 
-          {/* Divider */}
           <div className="w-px h-5 bg-gray-200 dark:bg-gray-700" />
 
           {/* Theme toggle */}
@@ -103,14 +107,11 @@ export function Header({
             title={theme === 'dark' ? t.lightMode : t.darkMode}
             className="w-8 h-8 rounded-xl flex items-center justify-center
               bg-gray-100 hover:bg-gray-200 text-gray-500 dark:text-gray-400
-              dark:bg-gray-800 dark:hover:bg-gray-700
-              transition-all duration-150"
+              dark:bg-gray-800 dark:hover:bg-gray-700 transition-all duration-150"
           >
-            {theme === 'dark' ? (
-              <Sun size={14} strokeWidth={2} />
-            ) : (
-              <Moon size={14} strokeWidth={2} />
-            )}
+            {theme === 'dark'
+              ? <Sun size={14} strokeWidth={2} />
+              : <Moon size={14} strokeWidth={2} />}
           </button>
         </div>
       </div>
