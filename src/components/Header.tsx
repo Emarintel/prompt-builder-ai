@@ -34,9 +34,9 @@ export function Header({
         {/* ── Branding ── */}
         <div className={`flex items-center gap-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
           <img
-            src="/emarintel-logo.png"
+            src="/emarintel-logo.svg"
             alt="Emarintel"
-            className="h-16 w-auto object-contain"
+            className="h-12 sm:h-16 w-auto max-w-[260px] object-contain shrink-0"
           />
           <div className={isRtl ? 'text-right' : ''}>
             <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
