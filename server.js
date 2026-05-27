@@ -243,39 +243,25 @@ function buildFallback(input, language) {
 }
 
 // ── Claude call ───────────────────────────────────────────────────────────────
-// attempt 0: normal call
-// attempt 1: prefill assistant turn with "{" to force JSON start
-// fallback:  return structured fallback (never hang the client)
-async function callClaude(input, language, mode, attempt = 0) {
-  const userMsg   = { role: 'user', content: buildMessage(input, language, mode) };
-  const messages  = attempt === 0
-    ? [userMsg]
-    : [userMsg, { role: 'assistant', content: '{' }];
-
+// Single attempt only — assistant prefill is not supported by this model.
+// On JSON parse failure, return structured fallback immediately.
+async function callClaude(input, language, mode) {
   const msg = await anthropic.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 3200,
-    temperature: attempt === 0 ? 0.3 : 0,
+    temperature: 0.3,
     system: SYSTEM_PROMPT,
-    messages,
+    messages: [{ role: 'user', content: buildMessage(input, language, mode) }],
   }, { timeout: 55_000 }); // 55 s — client AbortController fires at 60 s
 
-  // When we prefilled with "{", prepend it back before parsing
-  const text = msg.content[0]?.text ?? '';
-  const raw  = attempt === 1 ? '{' + text : text;
-
+  const raw = msg.content[0]?.text ?? '';
   const parsed = safeParse(raw);
 
   if (parsed) {
     return cleanupResponse(parsed);
   }
 
-  if (attempt === 0) {
-    console.warn('[claude] JSON parse failed — retrying with assistant prefill');
-    return callClaude(input, language, mode, 1);
-  }
-
-  console.error('[claude] Both attempts failed — returning structured fallback. Raw (300):', raw.slice(0, 300));
+  console.error('[claude] JSON parse failed — returning structured fallback. Raw (300):', raw.slice(0, 300));
   return buildFallback(input, language);
 }
 
