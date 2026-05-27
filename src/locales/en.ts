@@ -98,6 +98,10 @@ export const en = {
     shareLink: 'Share Link',
     linkCopied: 'Link copied!',
   },
+  usage: {
+    left: 'left today',
+    limitReached: 'Daily limit reached',
+  },
   score: {
     title: 'Prompt Quality Score',
     subtitle: 'Analyzed before AI optimization',

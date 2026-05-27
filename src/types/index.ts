@@ -11,6 +11,8 @@ export interface AIResponse {
   riskLevel?: 'low' | 'medium' | 'high' | 'critical';
   stabilityFix?: string;
   stablerRewrite?: string;
+  remaining?: number;
+  dailyLimit?: number;
 }
 
 export interface ScoreCriteria {

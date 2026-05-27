@@ -12,6 +12,29 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const app = express();
 app.use(express.json({ limit: '16kb' }));
 
+// ── In-memory rate limiter ─────────────────────────────────────────────────────
+const DAILY_LIMIT = 10;
+const DAY_MS      = 24 * 60 * 60 * 1000;
+const usageStore  = new Map(); // ip → { count, resetAt }
+
+function checkRateLimit(ip) {
+  const now   = Date.now();
+  let   entry = usageStore.get(ip);
+  if (!entry || now > entry.resetAt) {
+    entry = { count: 0, resetAt: now + DAY_MS };
+    usageStore.set(ip, entry);
+  }
+  if (entry.count >= DAILY_LIMIT) return { allowed: false, remaining: 0 };
+  entry.count++;
+  return { allowed: true, remaining: DAILY_LIMIT - entry.count };
+}
+
+function getIp(req) {
+  return (req.headers['x-forwarded-for'] ?? '').split(',')[0].trim()
+    || req.socket?.remoteAddress
+    || 'unknown';
+}
+
 // ── System prompt ─────────────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `You are an elite prompt analyst with automatic inference. Classify, infer all missing values, diagnose issues, produce three rewrites.
 
@@ -173,12 +196,24 @@ app.post('/api/analyze', async (req, res) => {
   if (!input?.trim() || !['en', 'fa'].includes(language)) {
     return res.status(400).json({ error: 'Fields required: input (string), language ("en"|"fa").' });
   }
+
+  const ip = getIp(req);
+  const { allowed, remaining } = checkRateLimit(ip);
+  if (!allowed) {
+    const msg = language === 'fa'
+      ? `سقف روزانه: ${DAILY_LIMIT} تحلیل در روز. فردا دوباره تلاش کنید.`
+      : `Daily limit reached. You can run ${DAILY_LIMIT} analyses per day. Try again tomorrow.`;
+    return res.status(429).json({ error: msg, remaining: 0, dailyLimit: DAILY_LIMIT });
+  }
+
   if (!process.env.ANTHROPIC_API_KEY) {
     return res.status(500).json({ error: 'ANTHROPIC_API_KEY is not set on the server.' });
   }
 
   try {
     const result = await callClaude(input.trim(), language, mode);
+    result.remaining  = remaining;
+    result.dailyLimit = DAILY_LIMIT;
     res.json(result);
   } catch (err) {
     console.error('[/api/analyze]', err.message);

@@ -30,6 +30,7 @@ interface Props {
   liveScore: QualityScore | null;
   mode: PromptMode;
   onModeChange: (mode: PromptMode) => void;
+  usageRemaining?: number | null;
   t: Pick<
     Translations,
     | 'inputLabel'
@@ -42,6 +43,7 @@ interface Props {
     | 'tagline'
     | 'score'
     | 'modes'
+    | 'usage'
   >;
 }
 
@@ -55,6 +57,7 @@ export function PromptInput({
   liveScore,
   mode,
   onModeChange,
+  usageRemaining,
   t,
 }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -233,6 +236,25 @@ export function PromptInput({
               {value.length} {t.chars}
             </span>
           </div>
+
+          {/* Usage remaining badge */}
+          {usageRemaining !== null && usageRemaining !== undefined && (
+            <span
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border shrink-0
+                ${usageRemaining <= 2
+                  ? 'bg-red-50 dark:bg-red-950/50 text-red-500 dark:text-red-400 border-red-200 dark:border-red-800/50'
+                  : usageRemaining <= 4
+                  ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800/50'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700'
+                } ${isRtl ? 'font-vazirmatn flex-row-reverse' : ''}`}
+              title={`${usageRemaining} ${t.usage.left}`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                usageRemaining <= 2 ? 'bg-red-400' : usageRemaining <= 4 ? 'bg-amber-400' : 'bg-gray-400'
+              }`} />
+              {usageRemaining} {t.usage.left}
+            </span>
+          )}
 
           {/* Analyze button */}
           <button

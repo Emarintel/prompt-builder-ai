@@ -61,6 +61,7 @@ export default function App() {
     _share ? scorePrompt(_share.i, _share.l) : null
   );
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [usageRemaining, setUsageRemaining] = useState<number | null>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -118,6 +119,7 @@ export default function App() {
     try {
       const result = await analyzePrompt(trimmed, lang, mode);
       setResponse(result);
+      if (typeof result.remaining === 'number') setUsageRemaining(result.remaining);
       addItem({ input: trimmed, response: result, language: lang });
     } catch (err) {
       setError(parseErrorMessage(err));
@@ -175,6 +177,7 @@ export default function App() {
               liveScore={liveScore}
               mode={mode}
               onModeChange={setMode}
+              usageRemaining={usageRemaining}
               t={t}
             />
 

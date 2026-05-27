@@ -100,6 +100,10 @@ export const fa: Translations = {
     shareLink: 'اشتراک لینک',
     linkCopied: 'لینک کپی شد!',
   },
+  usage: {
+    left: 'باقی‌مانده امروز',
+    limitReached: 'سقف روزانه',
+  },
   score: {
     title: 'امتیاز کیفیت پرامپت',
     subtitle: 'تحلیل‌شده قبل از بهینه‌سازی AI',
