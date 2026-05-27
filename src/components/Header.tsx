@@ -29,21 +29,21 @@ export function Header({
         bg-white/85 dark:bg-gray-900/85 backdrop-blur-xl"
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      <div className="max-w-6xl mx-auto px-4 h-20 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
 
         {/* ── Branding ── */}
-        <div className={`flex items-center gap-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
+        <div className={`flex items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
           <img
-            src="/emarintel-logo.svg"
+            src="/emarintel-icon.png"
             alt="Emarintel"
-            className="h-12 sm:h-16 w-auto max-w-[260px] object-contain shrink-0"
+            className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl object-contain shrink-0"
           />
           <div className={isRtl ? 'text-right' : ''}>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
+            <h1 className="text-[15px] sm:text-base font-bold text-gray-900 dark:text-white leading-tight tracking-tight">
               PromptBuilder{' '}
               <span className="text-violet-600 dark:text-violet-400">AI</span>
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-none mt-0.5">
               by Emarintel
             </p>
           </div>
