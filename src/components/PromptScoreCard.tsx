@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { TrendingUp } from 'lucide-react';
 import { QualityScore, ScoreLevel, Language, SCORE_MAX } from '../types';
+import { isRtlLanguage } from '../utils/languageUtils';
 import { Translations } from '../locales/en';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -148,6 +149,7 @@ function CriterionBar({
   animated,
   delay,
   isRtl,
+  isPersian,
 }: {
   label: string;
   value: number;
@@ -156,6 +158,7 @@ function CriterionBar({
   animated: boolean;
   delay: number;
   isRtl: boolean;
+  isPersian: boolean;
 }) {
   const pct = (value / max) * 100;
   const isLow = pct < 40;
@@ -165,7 +168,7 @@ function CriterionBar({
       {/* Label */}
       <span
         className={`text-xs text-gray-600 dark:text-gray-400 shrink-0 w-[108px]
-          ${isRtl ? 'text-right font-vazirmatn' : 'text-left'}`}
+          ${isRtl ? 'text-right' : 'text-left'} ${isPersian ? 'font-vazirmatn' : ''}`}
       >
         {label}
       </span>
@@ -210,7 +213,8 @@ interface Props {
 
 export function PromptScoreCard({ score, language, t }: Props) {
   const [animated, setAnimated] = useState(false);
-  const isRtl = language === 'fa';
+  const isRtl = isRtlLanguage(language);
+  const isPersian = language === 'fa';
   const cfg = LEVEL_CONFIG[score.level];
 
   // Trigger entry animation after paint
@@ -249,11 +253,11 @@ export function PromptScoreCard({ score, language, t }: Props) {
           <div className={isRtl ? 'text-right' : ''}>
             <h3
               className={`text-sm font-semibold text-gray-900 dark:text-white
-                ${isRtl ? 'font-vazirmatn' : ''}`}
+                ${isPersian ? 'font-vazirmatn' : ''}`}
             >
               {t.score.title}
             </h3>
-            <p className={`text-[11px] text-gray-400 dark:text-gray-500 mt-0.5 ${isRtl ? 'font-vazirmatn' : ''}`}>
+            <p className={`text-[11px] text-gray-400 dark:text-gray-500 mt-0.5 ${isPersian ? 'font-vazirmatn' : ''}`}>
               {t.score.subtitle}
             </p>
           </div>
@@ -262,7 +266,7 @@ export function PromptScoreCard({ score, language, t }: Props) {
         {/* Level badge */}
         <span
           className={`text-xs font-semibold px-2.5 py-1 rounded-full border
-            ${cfg.badgeClass} ${isRtl ? 'font-vazirmatn' : ''}`}
+            ${cfg.badgeClass} ${isPersian ? 'font-vazirmatn' : ''}`}
         >
           {t.score.levels[score.level]}
         </span>
@@ -275,20 +279,20 @@ export function PromptScoreCard({ score, language, t }: Props) {
         <div className={`flex-1 min-w-0 ${isRtl ? 'text-right' : ''}`}>
           <p
             className={`text-3xl font-bold leading-none mb-1 ${cfg.textClass}
-              ${isRtl ? 'font-vazirmatn' : ''}`}
+              ${isPersian ? 'font-vazirmatn' : ''}`}
           >
             {score.total}
             <span className="text-base font-medium text-gray-400 dark:text-gray-500">/100</span>
           </p>
           <p
             className={`text-sm font-semibold ${cfg.textClass} mb-2
-              ${isRtl ? 'font-vazirmatn' : ''}`}
+              ${isPersian ? 'font-vazirmatn' : ''}`}
           >
             {t.score.levels[score.level]}
           </p>
           <p
             className={`text-xs text-gray-500 dark:text-gray-400 leading-relaxed
-              ${isRtl ? 'font-vazirmatn' : ''}`}
+              ${isPersian ? 'font-vazirmatn' : ''}`}
           >
             {t.score.levelDesc[score.level]}
           </p>
@@ -310,6 +314,7 @@ export function PromptScoreCard({ score, language, t }: Props) {
             animated={animated}
             delay={idx * 70}
             isRtl={isRtl}
+            isPersian={isPersian}
           />
         ))}
       </div>
@@ -321,7 +326,7 @@ export function PromptScoreCard({ score, language, t }: Props) {
           <div className="px-5 py-4">
             <p
               className={`text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase
-                tracking-wide mb-3 ${isRtl ? 'font-vazirmatn text-right' : ''}`}
+                tracking-wide mb-3 ${isRtl ? 'text-right' : ''} ${isPersian ? 'font-vazirmatn' : ''}`}
             >
               {t.score.howToImprove}
             </p>
@@ -330,7 +335,7 @@ export function PromptScoreCard({ score, language, t }: Props) {
                 <li
                   key={i}
                   className={`flex items-start gap-2.5 text-xs text-gray-600 dark:text-gray-300
-                    leading-relaxed ${isRtl ? 'flex-row-reverse text-right font-vazirmatn' : ''}`}
+                    leading-relaxed ${isRtl ? 'flex-row-reverse text-right' : ''} ${isPersian ? 'font-vazirmatn' : ''}`}
                 >
                   <span
                     className={`mt-1 shrink-0 w-1.5 h-1.5 rounded-full ${cfg.barClass}

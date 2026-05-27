@@ -1,4 +1,5 @@
 import { Language } from '../types';
+import { isRtlLanguage } from '../utils/languageUtils';
 import { CopyButton } from './CopyButton';
 import { Translations } from '../locales/en';
 
@@ -36,16 +37,18 @@ function getItemDot(text: string): string {
 function PromptBlock({
   text,
   isRtl,
+  isPersian,
 }: {
   text: string;
   isRtl: boolean;
+  isPersian: boolean;
 }) {
   const lines = text.split('\n');
   return (
     <div
       className={`rounded-xl bg-gray-50 dark:bg-gray-950 border border-gray-100
         dark:border-gray-700/60 p-4 text-sm leading-relaxed space-y-0.5
-        ${isRtl ? 'font-vazirmatn text-right' : 'font-mono'}`}
+        ${isRtl ? 'text-right' : 'font-mono'} ${isPersian ? 'font-vazirmatn' : ''}`}
     >
       {lines.map((line, i) => {
         if (line.startsWith('# ')) {
@@ -72,13 +75,15 @@ function PromptBlock({
 function StructureBlock({
   text,
   isRtl,
+  isPersian,
 }: {
   text: string;
   isRtl: boolean;
+  isPersian: boolean;
 }) {
   const lines = text.split('\n');
   return (
-    <div className={`space-y-2 ${isRtl ? 'font-vazirmatn text-right' : ''}`}>
+    <div className={`space-y-2 ${isRtl ? 'text-right' : ''} ${isPersian ? 'font-vazirmatn' : ''}`}>
       {lines.map((line, i) => {
         if (line === '') return <div key={i} className="h-1" />;
         return (
@@ -94,12 +99,14 @@ function StructureBlock({
 function BulletList({
   items,
   isRtl,
+  isPersian,
 }: {
   items: string[];
   isRtl: boolean;
+  isPersian: boolean;
 }) {
   return (
-    <ul className={`space-y-2.5 ${isRtl ? 'font-vazirmatn' : ''}`}>
+    <ul className={`space-y-2.5 ${isPersian ? 'font-vazirmatn' : ''}`}>
       {items.map((item, i) => (
         <li
           key={i}
@@ -124,7 +131,8 @@ export function OutputCard({
   t,
   animationDelay,
 }: Props) {
-  const isRtl = language === 'fa';
+  const isRtl = isRtlLanguage(language);
+  const isPersian = language === 'fa';
   const copyText = Array.isArray(content) ? content.join('\n') : content;
   const isMultiline =
     typeof content === 'string' && (content.includes('\n') || content.includes('**'));
@@ -159,16 +167,16 @@ export function OutputCard({
 
       <div className="px-4 pb-4">
         {Array.isArray(content) ? (
-          <BulletList items={content} isRtl={isRtl} />
+          <BulletList items={content} isRtl={isRtl} isPersian={isPersian} />
         ) : isMultiline ? (
           title.toLowerCase().includes('structure') ||
           title.includes('ساختار') ? (
-            <StructureBlock text={content} isRtl={isRtl} />
+            <StructureBlock text={content} isRtl={isRtl} isPersian={isPersian} />
           ) : (
-            <PromptBlock text={content} isRtl={isRtl} />
+            <PromptBlock text={content} isRtl={isRtl} isPersian={isPersian} />
           )
         ) : (
-          <PromptBlock text={content} isRtl={isRtl} />
+          <PromptBlock text={content} isRtl={isRtl} isPersian={isPersian} />
         )}
       </div>
     </div>

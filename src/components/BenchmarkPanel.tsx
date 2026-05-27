@@ -1,5 +1,6 @@
 import { BarChart2, TrendingUp, TrendingDown, Minus, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { Language } from '../types';
+import { isRtlLanguage } from '../utils/languageUtils';
 import { Translations } from '../locales/en';
 import { BenchmarkResult } from '../utils/benchmarkPrompt';
 
@@ -17,9 +18,10 @@ interface BarRowProps {
   unit: string;
   lowerIsBetter?: boolean;
   isRtl: boolean;
+  isPersian: boolean;
 }
 
-function BarRow({ label, before, after, max, unit, lowerIsBetter, isRtl }: BarRowProps) {
+function BarRow({ label, before, after, max, unit, lowerIsBetter, isRtl, isPersian }: BarRowProps) {
   const delta       = lowerIsBetter ? before - after : after - before;
   const improved    = delta > 0;
   const neutral     = delta === 0;
@@ -34,7 +36,7 @@ function BarRow({ label, before, after, max, unit, lowerIsBetter, isRtl }: BarRo
   return (
     <div className={`space-y-1.5 ${isRtl ? 'text-right' : ''}`}>
       <div className={`flex items-center justify-between text-sm ${isRtl ? 'flex-row-reverse' : ''}`}>
-        <span className={`text-gray-600 dark:text-gray-400 font-medium ${isRtl ? 'font-vazirmatn' : ''}`}>
+        <span className={`text-gray-600 dark:text-gray-400 font-medium ${isPersian ? 'font-vazirmatn' : ''}`}>
           {label}
         </span>
         <div className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
@@ -67,7 +69,8 @@ function BarRow({ label, before, after, max, unit, lowerIsBetter, isRtl }: BarRo
 }
 
 export function BenchmarkPanel({ result, language, t }: Props) {
-  const isRtl = language === 'fa';
+  const isRtl = isRtlLanguage(language);
+  const isPersian = language === 'fa';
   const b = result;
 
   return (
@@ -82,11 +85,11 @@ export function BenchmarkPanel({ result, language, t }: Props) {
             flex items-center justify-center shrink-0">
             <BarChart2 size={10} className="text-white" strokeWidth={2.5} />
           </div>
-          <span className={`text-sm font-semibold text-gray-800 dark:text-gray-200 ${isRtl ? 'font-vazirmatn' : ''}`}>
+          <span className={`text-sm font-semibold text-gray-800 dark:text-gray-200 ${isPersian ? 'font-vazirmatn' : ''}`}>
             {t.benchmark.title}
           </span>
         </div>
-        <span className={`text-xs text-gray-400 dark:text-gray-500 ${isRtl ? 'font-vazirmatn' : ''}`}>
+        <span className={`text-xs text-gray-400 dark:text-gray-500 ${isPersian ? 'font-vazirmatn' : ''}`}>
           {t.benchmark.subtitle}
         </span>
       </div>
@@ -98,7 +101,7 @@ export function BenchmarkPanel({ result, language, t }: Props) {
         <BarRow
           label={t.benchmark.clarity}
           before={b.clarityBefore} after={b.clarityAfter}
-          max={100} unit="%" isRtl={isRtl}
+          max={100} unit="%" isRtl={isRtl} isPersian={isPersian}
         />
 
         {/* Tokens */}
@@ -106,19 +109,19 @@ export function BenchmarkPanel({ result, language, t }: Props) {
           label={t.benchmark.tokens}
           before={b.tokensBefore} after={b.tokensAfter}
           max={Math.max(b.tokensBefore, b.tokensAfter, 1)}
-          unit=" tok" lowerIsBetter isRtl={isRtl}
+          unit=" tok" lowerIsBetter isRtl={isRtl} isPersian={isPersian}
         />
 
         {/* Stability */}
         <BarRow
           label={t.benchmark.stability}
           before={b.stabilityBefore} after={b.stabilityAfter}
-          max={100} unit="" isRtl={isRtl}
+          max={100} unit="" isRtl={isRtl} isPersian={isPersian}
         />
 
         {/* Hallucination — boolean row */}
-        <div className={`flex items-center justify-between text-sm ${isRtl ? 'flex-row-reverse font-vazirmatn' : ''}`}>
-          <span className={`text-gray-600 dark:text-gray-400 font-medium ${isRtl ? 'font-vazirmatn' : ''}`}>
+        <div className={`flex items-center justify-between text-sm ${isRtl ? 'flex-row-reverse' : ''} ${isPersian ? 'font-vazirmatn' : ''}`}>
+          <span className={`text-gray-600 dark:text-gray-400 font-medium ${isPersian ? 'font-vazirmatn' : ''}`}>
             {t.benchmark.hallucination}
           </span>
           <div className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
@@ -140,18 +143,18 @@ export function BenchmarkPanel({ result, language, t }: Props) {
         <BarRow
           label={t.benchmark.structure}
           before={b.structureBefore} after={b.structureAfter}
-          max={8} unit={`/${t.benchmark.elements}`} isRtl={isRtl}
+          max={8} unit={`/${t.benchmark.elements}`} isRtl={isRtl} isPersian={isPersian}
         />
       </div>
 
       {/* Legend */}
       <div className="h-px bg-gray-100 dark:bg-gray-800 mx-5" />
       <div className={`hidden sm:flex items-center gap-4 px-5 py-2.5 ${isRtl ? 'flex-row-reverse' : ''}`}>
-        <div className={`flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 ${isRtl ? 'flex-row-reverse font-vazirmatn' : ''}`}>
+        <div className={`flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 ${isRtl ? 'flex-row-reverse' : ''} ${isPersian ? 'font-vazirmatn' : ''}`}>
           <div className="h-1 w-8 rounded-full bg-gray-300 dark:bg-gray-600" />
           {t.benchmark.before}
         </div>
-        <div className={`flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 ${isRtl ? 'flex-row-reverse font-vazirmatn' : ''}`}>
+        <div className={`flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 ${isRtl ? 'flex-row-reverse' : ''} ${isPersian ? 'font-vazirmatn' : ''}`}>
           <div className="h-1.5 w-8 rounded-full bg-emerald-400" />
           {t.benchmark.after}
         </div>

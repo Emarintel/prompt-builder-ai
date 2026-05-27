@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Download, Copy, Link2, Check } from 'lucide-react';
 import { AIResponse, Language, PromptMode, QualityScore } from '../types';
+import { isRtlLanguage } from '../utils/languageUtils';
 import { Translations } from '../locales/en';
 import {
   buildTxt, buildMarkdown, buildJson,
@@ -32,7 +33,8 @@ function copyToClipboard(text: string): Promise<void> {
 export function ExportBar({ input, response, analyzedScore, language, mode, t }: Props) {
   const [copiedAll, setCopiedAll] = useState(false);
   const [sharedLink, setSharedLink] = useState(false);
-  const isRtl = language === 'fa';
+  const isRtl = isRtlLanguage(language);
+  const isPersian = language === 'fa';
 
   const baseName = `prompt-analysis-${new Date().toISOString().slice(0, 10)}`;
 
@@ -77,7 +79,7 @@ export function ExportBar({ input, response, analyzedScore, language, mode, t }:
     <div
       className={`bg-white dark:bg-gray-900 rounded-2xl border border-gray-200
         dark:border-gray-800 shadow-sm px-4 py-3 flex flex-wrap items-center gap-2
-        animate-fade-in ${isRtl ? 'flex-row-reverse font-vazirmatn' : ''}`}
+        animate-fade-in ${isRtl ? 'flex-row-reverse' : ''} ${isPersian ? 'font-vazirmatn' : ''}`}
     >
       <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide shrink-0">
         {t.export.title}

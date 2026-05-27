@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ShieldCheck, ShieldAlert, Copy, Check } from 'lucide-react';
 import { Language } from '../types';
+import { isRtlLanguage } from '../utils/languageUtils';
 import { Translations } from '../locales/en';
 
 type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
@@ -30,7 +31,8 @@ export function StabilityCard({
   t,
 }: Props) {
   const [copied, setCopied] = useState(false);
-  const isRtl = language === 'fa';
+  const isRtl = isRtlLanguage(language);
+  const isPersian = language === 'fa';
   const cfg = RISK_CONFIG[riskLevel];
   const Icon = riskLevel === 'low' ? ShieldCheck : ShieldAlert;
 
@@ -58,7 +60,7 @@ export function StabilityCard({
           >
             <Icon size={10} className="text-white" strokeWidth={2.5} />
           </div>
-          <span className={`text-sm font-semibold text-gray-800 dark:text-gray-200 ${isRtl ? 'font-vazirmatn' : ''}`}>
+          <span className={`text-sm font-semibold text-gray-800 dark:text-gray-200 ${isPersian ? 'font-vazirmatn' : ''}`}>
             {t.stability.title}
           </span>
         </div>
@@ -68,7 +70,7 @@ export function StabilityCard({
           <span className={`text-base font-bold tabular-nums ${cfg.score}`}>
             {stabilityScore}
           </span>
-          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${cfg.badge} ${isRtl ? 'font-vazirmatn' : ''}`}>
+          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${cfg.badge} ${isPersian ? 'font-vazirmatn' : ''}`}>
             {t.stability.levels[riskLevel]}
           </span>
         </div>
@@ -85,11 +87,11 @@ export function StabilityCard({
       {/* Quick Fix */}
       <div className="px-5 pt-3 pb-3">
         <p className={`text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1
-          ${isRtl ? 'font-vazirmatn text-right' : ''}`}>
+          ${isRtl ? 'text-right' : ''} ${isPersian ? 'font-vazirmatn' : ''}`}>
           {t.stability.quickFix}
         </p>
         <p className={`text-sm text-gray-700 dark:text-gray-300 leading-relaxed
-          ${isRtl ? 'font-vazirmatn text-right' : ''}`}>
+          ${isRtl ? 'text-right' : ''} ${isPersian ? 'font-vazirmatn' : ''}`}>
           {stabilityFix}
         </p>
       </div>
@@ -100,7 +102,7 @@ export function StabilityCard({
       <div className="px-5 pt-3 pb-4">
         <div className={`flex items-center justify-between mb-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
           <p className={`text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide
-            ${isRtl ? 'font-vazirmatn' : ''}`}>
+            ${isPersian ? 'font-vazirmatn' : ''}`}>
             {t.stability.saferRewrite}
           </p>
           <button
@@ -114,7 +116,7 @@ export function StabilityCard({
           </button>
         </div>
         <p className={`text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap
-          ${isRtl ? 'font-vazirmatn text-right' : ''}`}>
+          ${isRtl ? 'text-right' : ''} ${isPersian ? 'font-vazirmatn' : ''}`}>
           {stablerRewrite}
         </p>
       </div>

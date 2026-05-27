@@ -1,5 +1,6 @@
 import { Sparkles } from 'lucide-react';
 import { Language } from '../types';
+import { isRtlLanguage } from '../utils/languageUtils';
 import { Translations } from '../locales/en';
 
 interface Props {
@@ -8,12 +9,13 @@ interface Props {
 }
 
 export function EmptyState({ language, t }: Props) {
-  const isRtl = language === 'fa';
+  const isRtl = isRtlLanguage(language);
+  const isPersian = language === 'fa';
 
   return (
     <div
       className={`flex flex-col items-center justify-center py-16 px-6 text-center
-        animate-fade-in ${isRtl ? 'font-vazirmatn' : ''}`}
+        animate-fade-in ${isPersian ? 'font-vazirmatn' : ''}`}
       dir={isRtl ? 'rtl' : 'ltr'}
     >
       <div

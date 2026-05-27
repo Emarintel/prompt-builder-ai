@@ -1,5 +1,6 @@
 import { X, Trash2, Clock } from 'lucide-react';
 import { HistoryItem, Language } from '../types';
+import { isRtlLanguage, languageLabel, languageLocale } from '../utils/languageUtils';
 import { Translations } from '../locales/en';
 
 interface Props {
@@ -15,7 +16,7 @@ interface Props {
 
 function formatDate(timestamp: number, language: Language): string {
   return new Date(timestamp).toLocaleString(
-    language === 'fa' ? 'fa-IR' : 'en-US',
+    languageLocale(language),
     { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }
   );
 }
@@ -30,7 +31,7 @@ export function HistoryPanel({
   language,
   t,
 }: Props) {
-  const isRtl = language === 'fa';
+  const isRtl = isRtlLanguage(language);
 
   return (
     <>
@@ -66,7 +67,7 @@ export function HistoryPanel({
             <Clock size={14} className="text-indigo-500" strokeWidth={2} />
             <h2
               className={`font-semibold text-gray-900 dark:text-white text-sm
-                ${isRtl ? 'font-vazirmatn' : ''}`}
+                ${language === 'fa' ? 'font-vazirmatn' : ''}`}
             >
               {t.historyTitle}
             </h2>
@@ -86,7 +87,7 @@ export function HistoryPanel({
                 onClick={onClear}
                 className={`text-xs font-medium text-red-500 hover:text-red-600
                   dark:text-red-400 dark:hover:text-red-300 transition-colors
-                  ${isRtl ? 'font-vazirmatn' : ''}`}
+                  ${language === 'fa' ? 'font-vazirmatn' : ''}`}
               >
                 {t.clearHistory}
               </button>
@@ -109,7 +110,7 @@ export function HistoryPanel({
               <Clock size={22} className="text-gray-300 dark:text-gray-600" strokeWidth={1.5} />
               <p
                 className={`text-sm text-gray-400 dark:text-gray-500
-                  ${isRtl ? 'font-vazirmatn' : ''}`}
+                  ${language === 'fa' ? 'font-vazirmatn' : ''}`}
               >
                 {t.noHistory}
               </p>
@@ -131,8 +132,8 @@ export function HistoryPanel({
                   <p
                     className={`text-xs text-gray-700 dark:text-gray-300 line-clamp-2 flex-1
                       leading-relaxed
-                      ${item.language === 'fa' ? 'font-vazirmatn text-right' : 'text-left'}`}
-                    dir={item.language === 'fa' ? 'rtl' : 'ltr'}
+                      ${isRtlLanguage(item.language) ? 'text-right' : 'text-left'} ${item.language === 'fa' ? 'font-vazirmatn' : ''}`}
+                    dir={isRtlLanguage(item.language) ? 'rtl' : 'ltr'}
                   >
                     {item.input}
                   </p>
@@ -158,10 +159,12 @@ export function HistoryPanel({
                     className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium
                       ${item.language === 'fa'
                         ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
+                        : item.language === 'ar'
+                        ? 'bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400'
                         : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
                       }`}
                   >
-                    {item.language === 'fa' ? 'Persian' : 'English'}
+                    {languageLabel(item.language)}
                   </span>
                   <span className="text-[10px] text-gray-400 dark:text-gray-500">
                     {formatDate(item.timestamp, language)}

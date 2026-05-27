@@ -19,23 +19,44 @@ import { useHistory } from './hooks/useHistory';
 import { analyzePrompt } from './services/aiService';
 import { detectLanguage } from './utils/detectLanguage';
 import { scorePrompt } from './utils/scorePrompt';
+import { isRtlLanguage } from './utils/languageUtils';
 import { en } from './locales/en';
 import { fa } from './locales/fa';
 import { AlertCircle } from 'lucide-react';
 import { AIResponse, Language, HistoryItem, QualityScore, PromptMode } from './types';
 
-function parseErrorMessage(err: unknown): string {
-  if (!(err instanceof Error)) return 'Something went wrong. Please try again.';
-  if (err.name === 'AbortError') return 'Request timed out (>60 s). Please try again.';
+function parseErrorMessage(err: unknown, lang: Language = 'en'): string {
+  if (!(err instanceof Error)) {
+    if (lang === 'ar') return 'حدث خطأ ما. يرجى المحاولة مرة أخرى.';
+    if (lang === 'fa') return 'مشکلی پیش آمد. لطفاً دوباره تلاش کنید.';
+    return 'Something went wrong. Please try again.';
+  }
+  if (err.name === 'AbortError') {
+    if (lang === 'ar') return 'انتهت مهلة الطلب (أكثر من 60 ث). يرجى المحاولة مرة أخرى.';
+    if (lang === 'fa') return 'درخواست زمان‌بر بود (بیش از ۶۰ ثانیه). لطفاً دوباره تلاش کنید.';
+    return 'Request timed out (>60 s). Please try again.';
+  }
   const msg = err.message.toLowerCase();
-  if (msg.includes('api key') || msg.includes('authentication'))
+  if (msg.includes('api key') || msg.includes('authentication')) {
+    if (lang === 'ar') return 'مفتاح API غير صالح أو مفقود. يرجى التحقق من إعدادات الخادم.';
+    if (lang === 'fa') return 'کلید API نامعتبر یا مفقود است. لطفاً تنظیمات سرور را بررسی کنید.';
     return 'API key is invalid or missing. Please check server configuration.';
-  if (msg.includes('rate limit') || msg.includes('429') || msg.includes('overloaded'))
+  }
+  if (msg.includes('rate limit') || msg.includes('429') || msg.includes('overloaded')) {
+    if (lang === 'ar') return 'الخادم مشغول. يرجى الانتظار لحظة والمحاولة مرة أخرى.';
+    if (lang === 'fa') return 'سرور مشغول است. لطفاً لحظه‌ای صبر کنید و دوباره تلاش کنید.';
     return 'Server is busy. Please wait a moment and try again.';
-  if (msg.includes('timed out') || msg.includes('timeout'))
+  }
+  if (msg.includes('timed out') || msg.includes('timeout')) {
+    if (lang === 'ar') return 'استغرق الذكاء الاصطناعي وقتاً طويلاً. يرجى المحاولة مرة أخرى.';
+    if (lang === 'fa') return 'هوش مصنوعی دیر پاسخ داد. لطفاً دوباره تلاش کنید.';
     return 'The AI took too long to respond. Please try again.';
-  if (msg.includes('network') || msg.includes('fetch') || msg.includes('failed to fetch'))
+  }
+  if (msg.includes('network') || msg.includes('fetch') || msg.includes('failed to fetch')) {
+    if (lang === 'ar') return 'خطأ في الشبكة. يرجى التحقق من اتصالك والمحاولة مرة أخرى.';
+    if (lang === 'fa') return 'خطای شبکه. لطفاً اتصال اینترنت خود را بررسی کنید.';
     return 'Network error. Please check your connection and try again.';
+  }
   return err.message;
 }
 
@@ -84,6 +105,7 @@ export default function App() {
 
   const t = appLanguage === 'fa' ? fa : en;
   const isRtl = appLanguage === 'fa';
+  const isRtlOutput = isRtlLanguage(detectedLanguage);
 
   // Live score computed while user types (updates every keystroke, no API)
   const liveScore = useMemo<QualityScore | null>(() => {
@@ -125,7 +147,7 @@ export default function App() {
       if (typeof result.remaining === 'number') setUsageRemaining(result.remaining);
       addItem({ input: trimmed, response: result, language: lang });
     } catch (err) {
-      setError(parseErrorMessage(err));
+      setError(parseErrorMessage(err, lang));
     } finally {
       setIsLoading(false);
     }
@@ -227,13 +249,14 @@ export default function App() {
                 role="alert"
                 className={`rounded-2xl border border-red-200 dark:border-red-800/60
                   bg-red-50 dark:bg-red-950/40 p-4 animate-fade-in
-                  ${isRtl ? 'font-vazirmatn' : ''}`}
+                  ${detectedLanguage === 'fa' ? 'font-vazirmatn' : ''}`}
+                dir={isRtlOutput ? 'rtl' : 'ltr'}
               >
-                <div className={`flex items-start gap-2.5 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                <div className={`flex items-start gap-2.5 ${isRtlOutput ? 'flex-row-reverse' : ''}`}>
                   <AlertCircle size={15} className="text-red-500 shrink-0 mt-0.5" strokeWidth={2} />
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm text-red-600 dark:text-red-400 leading-relaxed
-                      ${isRtl ? 'text-right' : ''}`}>
+                      ${isRtlOutput ? 'text-right' : ''}`}>
                       {error}
                     </p>
                     {analyzedInput && (
@@ -243,7 +266,7 @@ export default function App() {
                           hover:text-red-700 dark:hover:text-red-300 underline underline-offset-2
                           transition-colors`}
                       >
-                        {isRtl ? '← دوباره تلاش کنید' : 'Try again →'}
+                        {detectedLanguage === 'ar' ? '← حاول مجدداً' : detectedLanguage === 'fa' ? '← دوباره تلاش کنید' : 'Try again →'}
                       </button>
                     )}
                   </div>

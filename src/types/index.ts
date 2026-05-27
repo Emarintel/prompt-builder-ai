@@ -52,7 +52,7 @@ export interface HistoryItem {
   timestamp: number;
 }
 
-export type Language = 'en' | 'fa';
+export type Language = 'en' | 'fa' | 'ar';
 export type Theme = 'light' | 'dark';
 export type PromptMode = 'chatgpt' | 'claude' | 'claude-code' | 'midjourney' | 'gemini' | 'amazon' | 'agent' | 'business';
 export const PROMPT_MODES: PromptMode[] = ['chatgpt', 'claude', 'claude-code', 'midjourney', 'gemini', 'amazon', 'agent', 'business'];

@@ -41,7 +41,7 @@ function getIp(req) {
 // ── System prompt ─────────────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `Respond with one JSON object only. Start with {, end with }. No markdown, no fences, no text outside JSON. On failure output {}.
 
-LANGUAGE: The user message begins with "LANGUAGE: Persian (Farsi)" or "LANGUAGE: English". Write every string in every field in that language. Always keep in English: JSON, API, token, prompt, AI, HTML, CSS, URL, Markdown, SEO, SDK.
+LANGUAGE: The user message begins with "LANGUAGE: Persian (Farsi)", "LANGUAGE: Arabic", or "LANGUAGE: English". Write every string in every field in that language. Always keep in English: JSON, API, token, prompt, AI, HTML, CSS, URL, Markdown, SEO, SDK, ChatGPT, Claude, Instagram, TikTok, CTA.
 
 You are an expert prompt analyst. Infer audience, context, output format, and constraints silently. Detect target tool (ChatGPT/Claude/Midjourney/Code/Agent/Business). Never use [placeholders] when confidence ≥ 70%.
 
@@ -75,9 +75,11 @@ const MODE_CONTEXT = {
   business:       'Target tool: Business use. Optimize for executive clarity, decision-ready insights, actionable recommendations.',
 };
 
+const LANG_LABEL = { en: 'English', fa: 'Persian (Farsi)', ar: 'Arabic' };
+
 const buildMessage = (input, language, mode) => {
   const modeCtx = MODE_CONTEXT[mode] ? `\n${MODE_CONTEXT[mode]}` : '';
-  const langLabel = language === 'fa' ? 'Persian (Farsi)' : 'English';
+  const langLabel = LANG_LABEL[language] ?? 'English';
   return `LANGUAGE: ${langLabel}${modeCtx}\n\nAnalyze:\n"""\n${input}\n"""\n\nReturn JSON only.`;
 };
 
@@ -152,59 +154,101 @@ function safeParse(raw) {
 
 // ── Fallback response — returned when all parse attempts fail ─────────────────
 function buildFallback(input, language) {
-  const fa = language === 'fa';
+  const T = {
+    en: {
+      structure: [
+        '**Goal** ✗ missing — defines what success looks like',
+        '**Context** ✗ missing — grounds the AI in relevant background',
+        '**Role** ✗ missing — sets expertise level and tone',
+        '**Output Format** ✗ missing — controls structure of the response',
+        '**Constraints** ✗ missing — prevents scope creep',
+        '**Examples** ✗ missing — anchors output quality',
+        '**Tone** ✗ missing — aligns register with audience',
+        '**Audience** ✗ missing — tailors vocabulary and depth',
+      ],
+      problems: [
+        '[HIGH] «prompt» — no specific goal defined. Why: output becomes unpredictable. Fix: Add goal, output format, and audience.',
+        '[MEDIUM] «prompt» — no expert role defined. Why: AI cannot calibrate response depth. Fix: Add an expert persona.',
+      ],
+      tips: [
+        'Before: "please help me with" (~5 tok) → After: remove entirely (~0 tok) · saves ~5 tokens',
+        'Before: "I would like you to" (~5 tok) → After: direct verb (~1 tok) · saves ~4 tokens',
+      ],
+      questions: [
+        'What output format do you need? (list / table / prose / code)',
+        'Who is the audience? (expert / general / executive)',
+        'Do you have a length or token budget constraint?',
+      ],
+      fix: 'Add a specific goal, output format, and expert role to the prompt.',
+    },
+    fa: {
+      structure: [
+        '**هدف** ✗ ناقص — مشخص نیست خروجی موفق چه شکلی دارد',
+        '**زمینه** ✗ ناقص — AI زمینه لازم برای پاسخ دقیق را ندارد',
+        '**نقش** ✗ ناقص — سطح تخصص و لحن مشخص نیست',
+        '**قالب خروجی** ✗ ناقص — ساختار پاسخ تعریف نشده',
+        '**محدودیت‌ها** ✗ ناقص — دامنه کار مشخص نیست',
+        '**مثال** ✗ ناقص — نمونه‌ای برای تنظیم کیفیت وجود ندارد',
+        '**لحن** ✗ ناقص — سبک بیان با مخاطب هماهنگ نیست',
+        '**مخاطب** ✗ ناقص — سطح دانش و حوزه خواننده معلوم نیست',
+      ],
+      problems: [
+        '[HIGH] «پرامپت» — هدف مشخصی تعریف نشده. Why: خروجی AI غیرقابل پیش‌بینی می‌شود. Fix: هدف، قالب خروجی و مخاطب را اضافه کنید.',
+        '[MEDIUM] «پرامپت» — نقش متخصص مشخص نیست. Why: AI سطح پاسخ را تنظیم نمی‌کند. Fix: یک پرسونای متخصص تعریف کنید.',
+      ],
+      tips: [
+        'Before: "لطفاً به من کمک کنید که" (~7 tok) → After: حذف کامل (~0 tok) · saves ~7 tokens',
+        'Before: "می‌خواهم که شما" (~5 tok) → After: فعل مستقیم (~1 tok) · saves ~4 tokens',
+      ],
+      questions: [
+        'قالب خروجی مورد نظر شما چیست؟ (فهرست / جدول / متن / کد)',
+        'مخاطب این محتوا کیست؟ (متخصص / عمومی / مدیر)',
+        'محدودیت طول یا تعداد token دارید؟',
+      ],
+      fix: 'هدف مشخص، قالب خروجی و نقش متخصص را به پرامپت اضافه کنید.',
+    },
+    ar: {
+      structure: [
+        '**الهدف** ✗ مفقود — يحدد شكل النتيجة الناجحة',
+        '**السياق** ✗ مفقود — يمنح AI الخلفية اللازمة للإجابة الدقيقة',
+        '**الدور** ✗ مفقود — يحدد مستوى الخبرة والنبرة',
+        '**صيغة الإخراج** ✗ مفقودة — تتحكم في هيكل الرد',
+        '**القيود** ✗ مفقودة — تمنع توسع النطاق',
+        '**الأمثلة** ✗ مفقودة — ترسّخ جودة الإخراج',
+        '**الأسلوب** ✗ مفقود — يوائم النبرة مع الجمهور',
+        '**الجمهور** ✗ مفقود — يحدد المستوى المعرفي والمجال',
+      ],
+      problems: [
+        '[HIGH] «prompt» — لا يوجد هدف محدد. Why: يصبح الإخراج غير متوقع. Fix: أضف الهدف وصيغة الإخراج والجمهور.',
+        '[MEDIUM] «prompt» — لا يوجد دور خبير. Why: لا يستطيع AI معايرة عمق الرد. Fix: أضف شخصية خبير.',
+      ],
+      tips: [
+        'Before: "أرجو مساعدتي في" (~5 tok) → After: فعل مباشر (~1 tok) · saves ~4 tokens',
+        'Before: "أريد منك أن" (~4 tok) → After: احذف (~0 tok) · saves ~4 tokens',
+      ],
+      questions: [
+        'ما صيغة الإخراج المطلوبة؟ (قائمة / جدول / نص / كود)',
+        'من هو الجمهور المستهدف؟ (خبير / عام / مدير)',
+        'هل لديك قيود على طول النص أو عدد الـ tokens؟',
+      ],
+      fix: 'أضف هدفاً محدداً وصيغة إخراج ودوراً للخبير إلى prompt.',
+    },
+  };
 
-  const structureLines = fa ? [
-    '**هدف** ✗ ناقص — مشخص نیست خروجی موفق چه شکلی دارد',
-    '**زمینه** ✗ ناقص — AI زمینه لازم برای پاسخ دقیق را ندارد',
-    '**نقش** ✗ ناقص — سطح تخصص و لحن مشخص نیست',
-    '**قالب خروجی** ✗ ناقص — ساختار پاسخ تعریف نشده',
-    '**محدودیت‌ها** ✗ ناقص — دامنه کار مشخص نیست',
-    '**مثال** ✗ ناقص — نمونه‌ای برای تنظیم کیفیت وجود ندارد',
-    '**لحن** ✗ ناقص — سبک بیان با مخاطب هماهنگ نیست',
-    '**مخاطب** ✗ ناقص — سطح دانش و حوزه خواننده معلوم نیست',
-  ] : [
-    '**Goal** ✗ missing — defines what success looks like',
-    '**Context** ✗ missing — grounds the AI in relevant background',
-    '**Role** ✗ missing — sets expertise level and tone',
-    '**Output Format** ✗ missing — controls structure of the response',
-    '**Constraints** ✗ missing — prevents scope creep',
-    '**Examples** ✗ missing — anchors output quality',
-    '**Tone** ✗ missing — aligns register with audience',
-    '**Audience** ✗ missing — tailors vocabulary and depth',
-  ];
+  const t = T[language] ?? T.en;
 
   return {
     professionalPrompt: input,
-    problems: [
-      fa ? '[HIGH] «پرامپت» — هدف مشخصی تعریف نشده. Why: خروجی AI غیرقابل پیش‌بینی می‌شود. Fix: هدف، قالب خروجی و مخاطب را اضافه کنید.'
-         : '[HIGH] «prompt» — no specific goal defined. Why: output becomes unpredictable. Fix: Add goal, output format, and audience.',
-      fa ? '[MEDIUM] «پرامپت» — نقش متخصص مشخص نیست. Why: AI سطح پاسخ را تنظیم نمی‌کند. Fix: یک پرسونای متخصص تعریف کنید.'
-         : '[MEDIUM] «prompt» — no expert role defined. Why: AI cannot calibrate response depth. Fix: Add an expert persona.',
-    ],
-    structureExplanation: structureLines.join('\n'),
-    tokenSavingTips: [
-      fa ? 'Before: "لطفاً به من کمک کنید که" (~7 tok) → After: حذف کامل (~0 tok) · saves ~7 tokens'
-         : 'Before: "please help me with" (~5 tok) → After: remove entirely (~0 tok) · saves ~5 tokens',
-      fa ? 'Before: "می‌خواهم که شما" (~5 tok) → After: فعل مستقیم (~1 tok) · saves ~4 tokens'
-         : 'Before: "I would like you to" (~5 tok) → After: direct verb (~1 tok) · saves ~4 tokens',
-    ],
+    problems: t.problems,
+    structureExplanation: t.structure.join('\n'),
+    tokenSavingTips: t.tips,
     shortOptimizedPrompt: input,
     detailedOptimizedPrompt: input,
-    suggestedQuestions: [
-      fa ? 'قالب خروجی مورد نظر شما چیست؟ (فهرست / جدول / متن / کد)'
-         : 'What output format do you need? (list / table / prose / code)',
-      fa ? 'مخاطب این محتوا کیست؟ (متخصص / عمومی / مدیر)'
-         : 'Who is the audience? (expert / general / executive)',
-      fa ? 'محدودیت طول یا تعداد token دارید؟'
-         : 'Do you have a length or token budget constraint?',
-    ],
+    suggestedQuestions: t.questions,
     confidenceScore: 30,
     stabilityScore: 50,
     riskLevel: 'medium',
-    stabilityFix: fa
-      ? 'هدف مشخص، قالب خروجی و نقش متخصص را به پرامپت اضافه کنید.'
-      : 'Add a specific goal, output format, and expert role to the prompt.',
+    stabilityFix: t.fix,
     stablerRewrite: input,
   };
 }
@@ -236,8 +280,8 @@ async function callClaude(input, language, mode) {
 app.post('/api/analyze', async (req, res) => {
   const { input, language, mode = 'chatgpt' } = req.body ?? {};
 
-  if (!input?.trim() || !['en', 'fa'].includes(language)) {
-    return res.status(400).json({ error: 'Fields required: input (string), language ("en"|"fa").' });
+  if (!input?.trim() || !['en', 'fa', 'ar'].includes(language)) {
+    return res.status(400).json({ error: 'Fields required: input (string), language ("en"|"fa"|"ar").' });
   }
 
   const ip = getIp(req);

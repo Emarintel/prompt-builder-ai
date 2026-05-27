@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { Sparkles, X, Zap } from 'lucide-react';
 import { Language, QualityScore, ScoreLevel, PromptMode, PROMPT_MODES } from '../types';
+import { isRtlLanguage, languageLabel } from '../utils/languageUtils';
 import { Translations } from '../locales/en';
 
 // Compact colour mapping for the mini score badge
@@ -62,7 +63,8 @@ export function PromptInput({
 }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isRtl = appLanguage === 'fa';
-  const inputIsRtl = value.length > 3 ? detectedLanguage === 'fa' : isRtl;
+  const inputIsRtl = value.length > 3 ? isRtlLanguage(detectedLanguage) : isRtl;
+  const inputIsPersian = value.length > 3 ? detectedLanguage === 'fa' : appLanguage === 'fa';
 
   useEffect(() => {
     const el = textareaRef.current;
@@ -158,7 +160,7 @@ export function PromptInput({
             className={`w-full min-h-[130px] bg-transparent px-4 py-3.5 pe-10 text-sm
               text-gray-800 dark:text-gray-200 placeholder:text-gray-400
               dark:placeholder:text-gray-500 resize-none outline-none leading-relaxed
-              ${inputIsRtl ? 'font-vazirmatn text-right' : 'font-sans text-left'}`}
+              ${inputIsRtl ? 'text-right' : 'text-left'} ${inputIsPersian ? 'font-vazirmatn' : 'font-sans'}`}
           />
           {value && (
             <button
@@ -203,11 +205,13 @@ export function PromptInput({
                   text-xs font-medium border shrink-0
                   ${detectedLanguage === 'fa'
                     ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-800/50'
+                    : detectedLanguage === 'ar'
+                    ? 'bg-violet-50 text-violet-600 dark:bg-violet-950/60 dark:text-violet-400 border-violet-200/60 dark:border-violet-800/50'
                     : 'bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border-blue-200/60 dark:border-blue-800/50'
-                  } ${isRtl ? 'font-vazirmatn' : ''}`}
+                  } ${detectedLanguage === 'fa' ? 'font-vazirmatn' : ''}`}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80" />
-                {t.detectedLanguage} {detectedLanguage === 'fa' ? 'Persian' : 'English'}
+                {t.detectedLanguage} {languageLabel(detectedLanguage)}
               </span>
             )}
 

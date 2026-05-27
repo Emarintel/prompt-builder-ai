@@ -1,4 +1,5 @@
 import { Language } from '../types';
+import { isRtlLanguage } from '../utils/languageUtils';
 import { Translations } from '../locales/en';
 
 interface Props {
@@ -31,7 +32,8 @@ function SkeletonCard({ lines = 4, showBadge = false }: { lines?: number; showBa
 }
 
 export function LoadingState({ language, t }: Props) {
-  const isRtl = language === 'fa';
+  const isRtl = isRtlLanguage(language);
+  const isPersian = language === 'fa';
 
   return (
     <div className="space-y-4 animate-fade-in" dir={isRtl ? 'rtl' : 'ltr'}>
@@ -51,7 +53,7 @@ export function LoadingState({ language, t }: Props) {
             />
           ))}
         </div>
-        <p className={`text-sm text-gray-500 dark:text-gray-400 ${isRtl ? 'font-vazirmatn' : ''}`}>
+        <p className={`text-sm text-gray-500 dark:text-gray-400 ${isPersian ? 'font-vazirmatn' : ''}`}>
           {t.analyzing}
         </p>
       </div>
