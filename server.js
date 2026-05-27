@@ -180,6 +180,8 @@ function buildFallback(input, language) {
         'Do you have a length or token budget constraint?',
       ],
       fix: 'Add a specific goal, output format, and expert role to the prompt.',
+      professional: 'Role: expert prompt engineer. Goal: rewrite the user request as a clear, professional prompt. Requirements: define role, goal, context, output format, constraints, and clarifying questions.',
+      unavailable: 'Optimization is temporarily unavailable. Please try again.',
     },
     fa: {
       structure: [
@@ -206,6 +208,8 @@ function buildFallback(input, language) {
         'محدودیت طول یا تعداد token دارید؟',
       ],
       fix: 'هدف مشخص، قالب خروجی و نقش متخصص را به پرامپت اضافه کنید.',
+      professional: 'نقش: متخصص پرامپت‌نویسی. هدف: بازنویسی درخواست کاربر به یک پرامپت واضح و حرفه‌ای. الزامات: نقش، هدف، زمینه، قالب خروجی، محدودیت‌ها و سوالات تکمیلی را مشخص کن.',
+      unavailable: 'بهینه‌سازی در حال حاضر در دسترس نیست. لطفاً دوباره تلاش کنید.',
     },
     ar: {
       structure: [
@@ -232,24 +236,26 @@ function buildFallback(input, language) {
         'هل لديك قيود على طول النص أو عدد الـ tokens؟',
       ],
       fix: 'أضف هدفاً محدداً وصيغة إخراج ودوراً للخبير إلى prompt.',
+      professional: 'الدور: خبير كتابة prompts. الهدف: إعادة صياغة طلب المستخدم كـ prompt واضح واحترافي. المتطلبات: حدد الدور والهدف والسياق وصيغة الإخراج والقيود والأسئلة التوضيحية.',
+      unavailable: 'التحسين غير متاح حالياً. يرجى المحاولة مرة أخرى.',
     },
   };
 
   const t = T[language] ?? T.en;
 
   return {
-    professionalPrompt: input,
-    problems: t.problems,
-    structureExplanation: t.structure.join('\n'),
-    tokenSavingTips: t.tips,
-    shortOptimizedPrompt: input,
-    detailedOptimizedPrompt: input,
-    suggestedQuestions: t.questions,
-    confidenceScore: 30,
-    stabilityScore: 50,
-    riskLevel: 'medium',
-    stabilityFix: t.fix,
-    stablerRewrite: input,
+    professionalPrompt:      t.professional,
+    problems:                t.problems,
+    structureExplanation:    t.structure.join('\n'),
+    tokenSavingTips:         t.tips,
+    shortOptimizedPrompt:    t.unavailable,
+    detailedOptimizedPrompt: t.unavailable,
+    suggestedQuestions:      t.questions,
+    confidenceScore:         30,
+    stabilityScore:          50,
+    riskLevel:               'medium',
+    stabilityFix:            t.fix,
+    stablerRewrite:          t.unavailable,
   };
 }
 
@@ -259,7 +265,7 @@ function buildFallback(input, language) {
 async function callClaude(input, language, mode) {
   const msg = await anthropic.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 1200,
+    max_tokens: 2500,
     temperature: 0.3,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: buildMessage(input, language, mode) }],
@@ -269,7 +275,13 @@ async function callClaude(input, language, mode) {
   const parsed = safeParse(raw);
 
   if (parsed) {
-    return cleanupResponse(parsed);
+    const result = cleanupResponse(parsed);
+    // Guard: if any optimized field is empty or echoes raw input, use fallback stubs
+    const fb = buildFallback(input, language);
+    for (const f of ['professionalPrompt', 'shortOptimizedPrompt', 'detailedOptimizedPrompt', 'stablerRewrite']) {
+      if (!result[f] || result[f] === input) result[f] = fb[f];
+    }
+    return result;
   }
 
   console.error('[claude] JSON parse failed — returning structured fallback. Raw (300):', raw.slice(0, 300));
