@@ -313,7 +313,13 @@ app.post('/api/analyze', async (req, res) => {
 
 // ── Serve built frontend in production ────────────────────────────────────────
 if (IS_PROD) {
-  app.use(express.static(path.join(__dirname, 'dist')));
+  app.use(express.static(path.join(__dirname, 'dist'), {
+    setHeaders(res, filePath) {
+      if (filePath.endsWith('index.html')) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      }
+    },
+  }));
   app.get('*', (_, res) => res.sendFile(path.join(__dirname, 'dist', 'index.html')));
 }
 

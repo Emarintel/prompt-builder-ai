@@ -1,12 +1,15 @@
-import { Language } from '../types';
+﻿import { Language } from '../types';
 
-// Persian and Arabic share U+0600–U+06FF.
-// Persian-specific letters not found in standard Arabic: پ چ ژ گ + Persian ک (U+06A9) and ی (U+06CC).
+// Persian-specific letters not found in standard Arabic: پ چ ژ گ + Persian ک (U+06A9) and ی (U+06CC)
 const PERSIAN_SPECIFIC = /[پچژگکی]/;
 
 export function detectLanguage(text: string): Language {
-  const rtlChars = (text.match(/[؀-ۿ]/g) ?? []).length;
-  const totalSignificantChars = text.replace(/[\s\d\W]/g, '').length;
-  if (totalSignificantChars === 0 || rtlChars / totalSignificantChars <= 0.25) return 'en';
-  return PERSIAN_SPECIFIC.test(text) ? 'fa' : 'ar';
+  // Arabic/Persian (U+0600-U+06FF) + Arabic Supplement (U+0750-U+077F) + Arabic Extended-A (U+08A0-U+08FF)
+  const rtlChars = (text.match(/[؀-ۿݐ-ݿࢠ-ࣿ]/g) ?? []).length;
+  if (rtlChars >= 2) {
+    return PERSIAN_SPECIFIC.test(text) ? 'fa' : 'ar';
+  }
+  const latinChars = (text.match(/[A-Za-z]/g) ?? []).length;
+  if (latinChars > 0) return 'en';
+  return 'en';
 }

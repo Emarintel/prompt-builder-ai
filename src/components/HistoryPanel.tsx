@@ -67,7 +67,7 @@ export function HistoryPanel({
             <Clock size={14} className="text-indigo-500" strokeWidth={2} />
             <h2
               className={`font-semibold text-gray-900 dark:text-white text-sm
-                ${language === 'fa' ? 'font-vazirmatn' : ''}`}
+                ${isRtl ? 'font-vazirmatn' : ''}`}
             >
               {t.historyTitle}
             </h2>
@@ -87,7 +87,7 @@ export function HistoryPanel({
                 onClick={onClear}
                 className={`text-xs font-medium text-red-500 hover:text-red-600
                   dark:text-red-400 dark:hover:text-red-300 transition-colors
-                  ${language === 'fa' ? 'font-vazirmatn' : ''}`}
+                  ${isRtl ? 'font-vazirmatn' : ''}`}
               >
                 {t.clearHistory}
               </button>
@@ -110,7 +110,7 @@ export function HistoryPanel({
               <Clock size={22} className="text-gray-300 dark:text-gray-600" strokeWidth={1.5} />
               <p
                 className={`text-sm text-gray-400 dark:text-gray-500
-                  ${language === 'fa' ? 'font-vazirmatn' : ''}`}
+                  ${isRtl ? 'font-vazirmatn' : ''}`}
               >
                 {t.noHistory}
               </p>

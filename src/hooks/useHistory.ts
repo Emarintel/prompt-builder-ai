@@ -15,7 +15,18 @@ export function useHistory() {
   });
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+    } catch (e) {
+      if (e instanceof DOMException && history.length > 0) {
+        // QuotaExceededError: drop oldest item and retry once
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(history.slice(0, -1)));
+        } catch {
+          console.warn('[useHistory] localStorage quota exceeded; history not persisted.');
+        }
+      }
+    }
   }, [history]);
 
   const addItem = (item: Omit<HistoryItem, 'id' | 'timestamp'>) => {

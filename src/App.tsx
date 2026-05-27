@@ -104,7 +104,7 @@ export default function App() {
   }, [response, isLoading]);
 
   const t = appLanguage === 'fa' ? fa : en;
-  const isRtl = appLanguage === 'fa';
+  const isRtl = isRtlLanguage(appLanguage);
   const isRtlOutput = isRtlLanguage(detectedLanguage);
 
   // Live score computed while user types (updates every keystroke, no API)

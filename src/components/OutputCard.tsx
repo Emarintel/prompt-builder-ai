@@ -170,7 +170,9 @@ export function OutputCard({
           <BulletList items={content} isRtl={isRtl} isPersian={isPersian} />
         ) : isMultiline ? (
           title.toLowerCase().includes('structure') ||
-          title.includes('ساختار') ? (
+          title.includes('ساختار') ||
+          title.includes('شکل') ||
+          title.includes('هيكل') ? (
             <StructureBlock text={content} isRtl={isRtl} isPersian={isPersian} />
           ) : (
             <PromptBlock text={content} isRtl={isRtl} isPersian={isPersian} />
