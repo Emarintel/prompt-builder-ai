@@ -289,6 +289,8 @@ app.post('/api/analyze', async (req, res) => {
   if (!allowed) {
     const msg = language === 'fa'
       ? `سقف روزانه: ${DAILY_LIMIT} تحلیل در روز. فردا دوباره تلاش کنید.`
+      : language === 'ar'
+      ? `وصلت إلى الحد اليومي: ${DAILY_LIMIT} تحليلات يومياً. حاول مجدداً غداً.`
       : `Daily limit reached. You can run ${DAILY_LIMIT} analyses per day. Try again tomorrow.`;
     return res.status(429).json({ error: msg, remaining: 0, dailyLimit: DAILY_LIMIT });
   }

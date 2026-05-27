@@ -241,7 +241,7 @@ export default function App() {
             )}
 
             {/* Loading skeletons */}
-            {isLoading && <LoadingState language={detectedLanguage} t={t} />}
+            {isLoading && <LoadingState language={appLanguage} t={t} />}
 
             {/* Error state */}
             {error && !isLoading && (
