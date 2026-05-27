@@ -50,17 +50,17 @@ Diagnose (quote offending phrase in «guillemets»): vague language · missing c
 Return exactly 12 fields:
 
 professionalPrompt — Targeted fix preserving voice. Infer missing values. No placeholders.
-problems — 4–6 items: "[SEVERITY] «phrase» — reason. Why: impact. Fix: action." SEVERITY=HIGH|MEDIUM|LOW|⚠. HIGH/⚠ first.
+problems — 3–4 items: "[SEVERITY] «phrase» — reason. Fix: action." SEVERITY=HIGH|MEDIUM|LOW|⚠. HIGH/⚠ first.
 structureExplanation — 8 lines: "**Element** ✓ present — note" or "**Element** ✗ missing — why". Elements: Goal·Context·Role·Output Format·Constraints·Examples·Tone·Audience.
-tokenSavingTips — 3–4 items: Before: "phrase" (~N tok) → After: "lean" (~M tok) · saves ~X tokens.
-shortOptimizedPrompt — ≤25 words. Role or action verb first. No placeholders.
-detailedOptimizedPrompt — ≤100 words. # header per section. No placeholders.
+tokenSavingTips — 2–3 items: Before: "phrase" (~N tok) → After: "lean" (~M tok) · saves ~X tokens.
+shortOptimizedPrompt — ≤20 words. Role or action verb first. No placeholders.
+detailedOptimizedPrompt — ≤60 words. # header per section. No placeholders.
 suggestedQuestions — Exactly 3 questions by impact. Only ask what inference cannot answer.
 confidenceScore — Integer 0–100.
 stabilityScore — Integer 0–100. Start 100; deduct: CONTRADICTION −25, IMPOSSIBLE −30, UNREALISTIC −20, HALLUCINATION −20, UNSTABLE −15, CONFLICTING_FORMAT −15, OVER_ENGINEERED −10, REDUNDANCY −5. Floor 0.
 riskLevel — "low"|"medium"|"high"|"critical".
-stabilityFix — One imperative sentence.
-stablerRewrite — ≤50 words. Eliminate all flagged risks. No placeholders.
+stabilityFix — One imperative sentence. ≤15 words.
+stablerRewrite — ≤30 words. Eliminate all flagged risks. No placeholders.
 
 Banned in every field: "As an AI"·"Certainly"·"Of course"·"Please note"·"Feel free to"·"In order to".`;
 
@@ -263,13 +263,21 @@ function buildFallback(input, language) {
 // Single attempt only — assistant prefill is not supported by this model.
 // On JSON parse failure, return structured fallback immediately.
 async function callClaude(input, language, mode) {
-  const msg = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 2500,
-    temperature: 0.3,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: buildMessage(input, language, mode) }],
-  }, { timeout: 45_000 }); // 45 s — client AbortController fires at 50 s
+  let msg;
+  try {
+    msg = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1800,
+      temperature: 0.3,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: buildMessage(input, language, mode) }],
+    }, { timeout: 28_000 }); // 28 s — leaves headroom to respond before Railway proxy cuts the connection
+  } catch (err) {
+    const isTimeout = /timeout|timed.?out/i.test(err.message ?? '') || err.constructor?.name?.toLowerCase().includes('timeout');
+    console.warn('[claude]', isTimeout ? 'timeout' : 'API error', '— returning fallback:', err.message);
+    if (isTimeout) return buildFallback(input, language);
+    throw err; // auth / quota errors still surface as 502
+  }
 
   const raw = msg.content[0]?.text ?? '';
   const parsed = safeParse(raw);
