@@ -46,6 +46,18 @@ Rules that cannot be broken:
 • Every string value must be valid JSON (escape quotes, no bare newlines)
 If you cannot comply, output {} — never output non-JSON.
 
+LANGUAGE RULE — READ SECOND (overrides everything else):
+The user message begins with "LANGUAGE: Persian" or "LANGUAGE: English".
+Every single string value in every field MUST be written entirely in that language.
+This applies to ALL 12 fields without exception:
+  professionalPrompt · problems · structureExplanation · tokenSavingTips
+  shortOptimizedPrompt · detailedOptimizedPrompt · suggestedQuestions
+  stabilityFix · stablerRewrite
+Persian output: write natural conversational Farsi. Do NOT translate English phrases word-for-word.
+English output: write natural English.
+Exception (both languages): keep these terms in English as-is — JSON, API, Markdown, SEO, React, SDK, HTML, CSS, TypeScript, Python, token, prompt, AI, LLM, URL, UUID.
+VIOLATION: mixing Persian explanations into an English response, or English explanations into a Persian response, is a hard error.
+
 You are an elite prompt analyst with automatic inference. Classify, infer all missing values, diagnose issues, produce three rewrites.
 
 STEP 1 — CLASSIFY & AUTO-INFER
@@ -110,10 +122,9 @@ OUTPUT QUALITY RULES — apply to every field:
 • Banned phrases: "As an AI", "Certainly", "Of course", "I'd recommend", "It's worth noting", "Please note", "Feel free to", "In order to" (use "To")
 • Never restate the same idea across fields — each field adds unique information
 • Prefer the shorter phrasing when two convey equal meaning
-• Persian: natural spoken Farsi, not translated English. Technical terms (API, JSON, tokens) stay in English.
 
-LANGUAGE RULE: Persian/Farsi input → respond entirely in natural Persian. English → English. Never mix within any field.
-OUTPUT RULE: Strict JSON only. No markdown fences. No text before or after. Your response starts with { and ends with }. Nothing else.`;
+FINAL REMINDER — LANGUAGE: Re-read the LANGUAGE RULE at the top. Every field must be entirely in the language declared there. No mixing.
+FINAL REMINDER — FORMAT: Strict JSON only. Starts with {. Ends with }. Nothing else.`;
 
 const MODE_CONTEXT = {
   chatgpt:        'Target tool: ChatGPT. Optimize for conversational clarity, structured output, instruction-following.',
@@ -128,7 +139,11 @@ const MODE_CONTEXT = {
 
 const buildMessage = (input, language, mode) => {
   const modeCtx = MODE_CONTEXT[mode] ? `\n${MODE_CONTEXT[mode]}` : '';
-  return `Language: ${language === 'fa' ? 'Persian (Farsi)' : 'English'} — respond entirely in this language.${modeCtx}\n\nAnalyze this prompt:\n"""\n${input}\n"""\n\nReturn strict JSON only.`;
+  const langLabel = language === 'fa' ? 'Persian (Farsi)' : 'English';
+  const langEnforce = language === 'fa'
+    ? 'CRITICAL: Write every field in natural Persian (Farsi). No English words except JSON, API, token, prompt, AI, Markdown, SEO, HTML, CSS, URL.'
+    : 'CRITICAL: Write every field in English.';
+  return `LANGUAGE: ${langLabel}\n${langEnforce}${modeCtx}\n\nAnalyze this prompt:\n"""\n${input}\n"""\n\nReturn strict JSON only. Every string value must be entirely in ${langLabel}.`;
 };
 
 // ── Response cleanup — strip AI filler, dedup arrays, clamp scores ───────────
@@ -203,25 +218,41 @@ function safeParse(raw) {
 // ── Fallback response — returned when all parse attempts fail ─────────────────
 function buildFallback(input, language) {
   const fa = language === 'fa';
+
+  const structureLines = fa ? [
+    '**هدف** ✗ ناقص — مشخص نیست خروجی موفق چه شکلی دارد',
+    '**زمینه** ✗ ناقص — AI زمینه لازم برای پاسخ دقیق را ندارد',
+    '**نقش** ✗ ناقص — سطح تخصص و لحن مشخص نیست',
+    '**قالب خروجی** ✗ ناقص — ساختار پاسخ تعریف نشده',
+    '**محدودیت‌ها** ✗ ناقص — دامنه کار مشخص نیست',
+    '**مثال** ✗ ناقص — نمونه‌ای برای تنظیم کیفیت وجود ندارد',
+    '**لحن** ✗ ناقص — سبک بیان با مخاطب هماهنگ نیست',
+    '**مخاطب** ✗ ناقص — سطح دانش و حوزه خواننده معلوم نیست',
+  ] : [
+    '**Goal** ✗ missing — defines what success looks like',
+    '**Context** ✗ missing — grounds the AI in relevant background',
+    '**Role** ✗ missing — sets expertise level and tone',
+    '**Output Format** ✗ missing — controls structure of the response',
+    '**Constraints** ✗ missing — prevents scope creep',
+    '**Examples** ✗ missing — anchors output quality',
+    '**Tone** ✗ missing — aligns register with audience',
+    '**Audience** ✗ missing — tailors vocabulary and depth',
+  ];
+
   return {
     professionalPrompt: input,
     problems: [
-      fa ? '[HIGH] «پرامپت» — هدف مشخصی تعریف نشده. Why: خروجی AI غیرقابل پیش‌بینی می‌شود. Fix: هدف، قالب خروجی و مخاطب را مشخص کنید.'
+      fa ? '[HIGH] «پرامپت» — هدف مشخصی تعریف نشده. Why: خروجی AI غیرقابل پیش‌بینی می‌شود. Fix: هدف، قالب خروجی و مخاطب را اضافه کنید.'
          : '[HIGH] «prompt» — no specific goal defined. Why: output becomes unpredictable. Fix: Add goal, output format, and audience.',
+      fa ? '[MEDIUM] «پرامپت» — نقش متخصص مشخص نیست. Why: AI سطح پاسخ را تنظیم نمی‌کند. Fix: یک پرسونای متخصص تعریف کنید.'
+         : '[MEDIUM] «prompt» — no expert role defined. Why: AI cannot calibrate response depth. Fix: Add an expert persona.',
     ],
-    structureExplanation: [
-      '**Goal** ✗ missing — defines what success looks like',
-      '**Context** ✗ missing — grounds the AI in relevant background',
-      '**Role** ✗ missing — sets expertise level and tone',
-      '**Output Format** ✗ missing — controls structure of the response',
-      '**Constraints** ✗ missing — prevents scope creep',
-      '**Examples** ✗ missing — anchors output quality',
-      '**Tone** ✗ missing — aligns register with audience',
-      '**Audience** ✗ missing — tailors vocabulary and depth',
-    ].join('\n'),
+    structureExplanation: structureLines.join('\n'),
     tokenSavingTips: [
-      fa ? 'Before: "لطفاً به من کمک کنید" (~6 tok) → After: حذف کنید (~0 tok) · saves ~6 tokens'
+      fa ? 'Before: "لطفاً به من کمک کنید که" (~7 tok) → After: حذف کامل (~0 tok) · saves ~7 tokens'
          : 'Before: "please help me with" (~5 tok) → After: remove entirely (~0 tok) · saves ~5 tokens',
+      fa ? 'Before: "می‌خواهم که شما" (~5 tok) → After: فعل مستقیم (~1 tok) · saves ~4 tokens'
+         : 'Before: "I would like you to" (~5 tok) → After: direct verb (~1 tok) · saves ~4 tokens',
     ],
     shortOptimizedPrompt: input,
     detailedOptimizedPrompt: input,
@@ -230,14 +261,15 @@ function buildFallback(input, language) {
          : 'What output format do you need? (list / table / prose / code)',
       fa ? 'مخاطب این محتوا کیست؟ (متخصص / عمومی / مدیر)'
          : 'Who is the audience? (expert / general / executive)',
-      fa ? 'محدودیت طول یا تعداد توکن دارید؟'
+      fa ? 'محدودیت طول یا تعداد token دارید؟'
          : 'Do you have a length or token budget constraint?',
     ],
     confidenceScore: 30,
     stabilityScore: 50,
     riskLevel: 'medium',
-    stabilityFix: fa ? 'هدف مشخص، قالب خروجی و نقش متخصص را اضافه کنید.'
-                     : 'Add a specific goal, output format, and expert role.',
+    stabilityFix: fa
+      ? 'هدف مشخص، قالب خروجی و نقش متخصص را به پرامپت اضافه کنید.'
+      : 'Add a specific goal, output format, and expert role to the prompt.',
     stablerRewrite: input,
   };
 }
