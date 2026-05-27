@@ -36,7 +36,17 @@ function getIp(req) {
 }
 
 // ── System prompt ─────────────────────────────────────────────────────────────
-const SYSTEM_PROMPT = `You are an elite prompt analyst with automatic inference. Classify, infer all missing values, diagnose issues, produce three rewrites.
+const SYSTEM_PROMPT = `OUTPUT FORMAT — READ FIRST:
+Your entire response must be a single valid JSON object.
+Rules that cannot be broken:
+• Start with { — no text, no explanation before it
+• End with } — no text, no explanation after it
+• No markdown, no code fences, no \`\`\`json blocks
+• No "Here is the JSON:", no preamble, no postamble
+• Every string value must be valid JSON (escape quotes, no bare newlines)
+If you cannot comply, output {} — never output non-JSON.
+
+You are an elite prompt analyst with automatic inference. Classify, infer all missing values, diagnose issues, produce three rewrites.
 
 STEP 1 — CLASSIFY & AUTO-INFER
 Detect target tool: Text (ChatGPT/Claude/Gemini) · Image (Midjourney/DALL-E/SD) · Code (Copilot/Cursor/Devin) · Agent · Business
@@ -103,7 +113,7 @@ OUTPUT QUALITY RULES — apply to every field:
 • Persian: natural spoken Farsi, not translated English. Technical terms (API, JSON, tokens) stay in English.
 
 LANGUAGE RULE: Persian/Farsi input → respond entirely in natural Persian. English → English. Never mix within any field.
-OUTPUT RULE: Strict JSON only. No markdown fences. No text before or after.`;
+OUTPUT RULE: Strict JSON only. No markdown fences. No text before or after. Your response starts with { and ends with }. Nothing else.`;
 
 const MODE_CONTEXT = {
   chatgpt:        'Target tool: ChatGPT. Optimize for conversational clarity, structured output, instruction-following.',
@@ -165,28 +175,108 @@ function cleanupResponse(obj) {
   return obj;
 }
 
-// ── Claude call — one automatic retry if JSON parse fails ─────────────────────
+// ── JSON extraction — tries 4 strategies before giving up ────────────────────
+function safeParse(raw) {
+  // 1. Direct parse (ideal path)
+  try { return JSON.parse(raw); } catch {}
+
+  // 2. Strip markdown fences then parse
+  const stripped = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/m, '').trim();
+  try { return JSON.parse(stripped); } catch {}
+
+  // 3. Extract the outermost {...} span
+  const first = stripped.indexOf('{');
+  const last  = stripped.lastIndexOf('}');
+  if (first !== -1 && last > first) {
+    try { return JSON.parse(stripped.slice(first, last + 1)); } catch {}
+  }
+
+  // 4. Greedy regex — handles prose wrapping a JSON block
+  const match = raw.match(/\{[\s\S]*\}/);
+  if (match) {
+    try { return JSON.parse(match[0]); } catch {}
+  }
+
+  return null;
+}
+
+// ── Fallback response — returned when all parse attempts fail ─────────────────
+function buildFallback(input, language) {
+  const fa = language === 'fa';
+  return {
+    professionalPrompt: input,
+    problems: [
+      fa ? '[HIGH] «پرامپت» — هدف مشخصی تعریف نشده. Why: خروجی AI غیرقابل پیش‌بینی می‌شود. Fix: هدف، قالب خروجی و مخاطب را مشخص کنید.'
+         : '[HIGH] «prompt» — no specific goal defined. Why: output becomes unpredictable. Fix: Add goal, output format, and audience.',
+    ],
+    structureExplanation: [
+      '**Goal** ✗ missing — defines what success looks like',
+      '**Context** ✗ missing — grounds the AI in relevant background',
+      '**Role** ✗ missing — sets expertise level and tone',
+      '**Output Format** ✗ missing — controls structure of the response',
+      '**Constraints** ✗ missing — prevents scope creep',
+      '**Examples** ✗ missing — anchors output quality',
+      '**Tone** ✗ missing — aligns register with audience',
+      '**Audience** ✗ missing — tailors vocabulary and depth',
+    ].join('\n'),
+    tokenSavingTips: [
+      fa ? 'Before: "لطفاً به من کمک کنید" (~6 tok) → After: حذف کنید (~0 tok) · saves ~6 tokens'
+         : 'Before: "please help me with" (~5 tok) → After: remove entirely (~0 tok) · saves ~5 tokens',
+    ],
+    shortOptimizedPrompt: input,
+    detailedOptimizedPrompt: input,
+    suggestedQuestions: [
+      fa ? 'قالب خروجی مورد نظر شما چیست؟ (فهرست / جدول / متن / کد)'
+         : 'What output format do you need? (list / table / prose / code)',
+      fa ? 'مخاطب این محتوا کیست؟ (متخصص / عمومی / مدیر)'
+         : 'Who is the audience? (expert / general / executive)',
+      fa ? 'محدودیت طول یا تعداد توکن دارید؟'
+         : 'Do you have a length or token budget constraint?',
+    ],
+    confidenceScore: 30,
+    stabilityScore: 50,
+    riskLevel: 'medium',
+    stabilityFix: fa ? 'هدف مشخص، قالب خروجی و نقش متخصص را اضافه کنید.'
+                     : 'Add a specific goal, output format, and expert role.',
+    stablerRewrite: input,
+  };
+}
+
+// ── Claude call ───────────────────────────────────────────────────────────────
+// attempt 0: normal call
+// attempt 1: prefill assistant turn with "{" to force JSON start
+// fallback:  return structured fallback (never hang the client)
 async function callClaude(input, language, mode, attempt = 0) {
+  const userMsg   = { role: 'user', content: buildMessage(input, language, mode) };
+  const messages  = attempt === 0
+    ? [userMsg]
+    : [userMsg, { role: 'assistant', content: '{' }];
+
   const msg = await anthropic.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 3200,
-    temperature: 0.3,
+    temperature: attempt === 0 ? 0.3 : 0,
     system: SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: buildMessage(input, language, mode) }],
+    messages,
   });
 
-  const raw = msg.content[0]?.text ?? '';
-  const clean = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+  // When we prefilled with "{", prepend it back before parsing
+  const text = msg.content[0]?.text ?? '';
+  const raw  = attempt === 1 ? '{' + text : text;
 
-  try {
-    return cleanupResponse(JSON.parse(clean));
-  } catch {
-    if (attempt === 0) {
-      console.warn('[claude] JSON parse failed — retrying with stricter instruction');
-      return callClaude(input, language, mode, 1);
-    }
-    throw new Error(`Invalid JSON after retry. Raw (first 300 chars): ${raw.slice(0, 300)}`);
+  const parsed = safeParse(raw);
+
+  if (parsed) {
+    return cleanupResponse(parsed);
   }
+
+  if (attempt === 0) {
+    console.warn('[claude] JSON parse failed — retrying with assistant prefill');
+    return callClaude(input, language, mode, 1);
+  }
+
+  console.error('[claude] Both attempts failed — returning structured fallback. Raw (300):', raw.slice(0, 300));
+  return buildFallback(input, language);
 }
 
 // ── POST /api/analyze ─────────────────────────────────────────────────────────
@@ -216,6 +306,7 @@ app.post('/api/analyze', async (req, res) => {
     result.dailyLimit = DAILY_LIMIT;
     res.json(result);
   } catch (err) {
+    // Only real network/API errors reach here (not parse failures — those return fallback)
     console.error('[/api/analyze]', err.message);
     res.status(502).json({ error: err.message ?? 'Claude API error.' });
   }
