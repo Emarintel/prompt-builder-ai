@@ -11,6 +11,7 @@ import { StabilityCard } from './components/StabilityCard';
 import { BenchmarkPanel } from './components/BenchmarkPanel';
 import { Toast } from './components/Toast';
 import { ExportBar } from './components/ExportBar';
+import { Footer } from './components/Footer';
 import { decodeShareState } from './utils/exportUtils';
 import { computeBenchmark } from './utils/benchmarkPrompt';
 import { useTheme } from './hooks/useTheme';
@@ -145,7 +146,7 @@ export default function App() {
 
   return (
     <div
-      className={`min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-300
+      className={`min-h-screen flex flex-col bg-gray-50 dark:bg-gray-950 transition-colors duration-300
         ${isRtl ? 'font-vazirmatn' : 'font-sans'}`}
       dir={isRtl ? 'rtl' : 'ltr'}
     >
@@ -159,7 +160,7 @@ export default function App() {
         t={t}
       />
 
-      <main className="max-w-6xl mx-auto px-4 py-6 pb-24 lg:pb-6">
+      <main className="flex-1 max-w-6xl mx-auto px-4 py-6 pb-24 lg:pb-6 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
 
           {/* ── LEFT: Input (sticky on desktop) ── */}
@@ -298,6 +299,8 @@ export default function App() {
           </div>
         </div>
       </main>
+
+      <Footer language={appLanguage} />
 
       <Toast message={toastMsg} />
 

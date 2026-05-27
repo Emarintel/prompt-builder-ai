@@ -1,4 +1,4 @@
-import { Sun, Moon, History, Languages, Zap } from 'lucide-react';
+import { Sun, Moon, History, Languages } from 'lucide-react';
 import { Theme, Language } from '../types';
 import { Translations } from '../locales/en';
 
@@ -30,27 +30,32 @@ export function Header({
       dir={isRtl ? 'rtl' : 'ltr'}
     >
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-        {/* Logo */}
-        <div className="flex items-center gap-2.5">
-          <div
-            className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600
-              flex items-center justify-center shadow-md shadow-indigo-500/20 shrink-0"
-          >
-            <Zap size={14} className="text-white" strokeWidth={2.5} />
-          </div>
+
+        {/* Logo + Branding */}
+        <div className="flex items-center gap-3">
+          <img
+            src="/emarintel-logo.png"
+            alt="Emarintel"
+            className="h-8 w-auto shrink-0 object-contain"
+          />
           <div className="leading-none">
-            <span className="text-sm font-bold text-gray-900 dark:text-white tracking-tight">
-              Prompt
-            </span>
-            <span
-              className="text-sm font-bold bg-gradient-to-r from-indigo-500 to-violet-500
-                bg-clip-text text-transparent ms-1"
-            >
-              Builder
-            </span>
-            <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 ms-1">
-              AI
-            </span>
+            <div>
+              <span className="text-sm font-bold text-gray-900 dark:text-white tracking-tight">
+                Prompt
+              </span>
+              <span
+                className="text-sm font-bold bg-gradient-to-r from-indigo-500 to-violet-500
+                  bg-clip-text text-transparent ms-1"
+              >
+                Builder
+              </span>
+              <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 ms-1">
+                AI
+              </span>
+            </div>
+            <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 leading-none">
+              by Emarintel
+            </p>
           </div>
         </div>
 
