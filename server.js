@@ -8,7 +8,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT ?? 3001);
 const IS_PROD = process.env.NODE_ENV === 'production';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  maxRetries: 0, // disable SDK auto-retries — each retry adds a full timeout window
+});
 const app = express();
 app.use(express.json({ limit: '16kb' }));
 
@@ -284,7 +287,7 @@ async function callClaude(input, language, mode) {
     temperature: 0.3,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: buildMessage(input, language, mode) }],
-  }, { timeout: 55_000 }); // 55 s — client AbortController fires at 60 s
+  }, { timeout: 45_000 }); // 45 s — client AbortController fires at 50 s
 
   const raw = msg.content[0]?.text ?? '';
   const parsed = safeParse(raw);
