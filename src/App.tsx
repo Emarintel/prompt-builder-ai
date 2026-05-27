@@ -164,7 +164,7 @@ export default function App() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
 
           {/* ── LEFT: Input (sticky on desktop) ── */}
-          <div className="lg:col-span-2 lg:sticky lg:top-20 lg:self-start space-y-3">
+          <div className="lg:col-span-2 lg:sticky lg:top-24 lg:self-start space-y-3">
             <PromptInput
               value={input}
               onChange={handleInputChange}

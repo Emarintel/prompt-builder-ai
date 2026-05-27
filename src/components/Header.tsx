@@ -29,38 +29,23 @@ export function Header({
         bg-white/85 dark:bg-gray-900/85 backdrop-blur-xl"
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto px-4 h-20 flex items-center justify-between">
 
         {/* ── Branding ── */}
-        <div className={`flex items-center gap-3.5 ${isRtl ? 'flex-row-reverse' : ''}`}>
+        <div className={`flex items-center gap-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
           <img
             src="/emarintel-logo.png"
             alt="Emarintel"
-            className="h-12 w-auto shrink-0 object-contain"
+            className="h-16 w-auto object-contain"
           />
-          <div className={`flex flex-col gap-1 ${isRtl ? 'items-end' : 'items-start'}`}>
-            {/* App name */}
-            <div className="flex items-baseline gap-1 leading-none">
-              <span className="text-[15px] font-bold text-gray-900 dark:text-white tracking-tight">
-                PromptBuilder
-              </span>
-              <span
-                className="text-[15px] font-bold bg-gradient-to-r from-indigo-500 to-violet-500
-                  bg-clip-text text-transparent"
-              >
-                AI
-              </span>
-            </div>
-            {/* Brand badge */}
-            <span
-              className="inline-flex items-center px-1.5 py-0.5 rounded-md leading-none
-                text-[10px] font-semibold tracking-wide
-                bg-indigo-50 dark:bg-indigo-950/60
-                text-indigo-500 dark:text-indigo-400
-                border border-indigo-100 dark:border-indigo-900/60"
-            >
+          <div className={isRtl ? 'text-right' : ''}>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
+              PromptBuilder{' '}
+              <span className="text-violet-600 dark:text-violet-400">AI</span>
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               by Emarintel
-            </span>
+            </p>
           </div>
         </div>
 
