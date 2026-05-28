@@ -267,7 +267,7 @@ async function callClaude(input, language, mode) {
   try {
     msg = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1800,
+      max_tokens: 2200,
       temperature: 0.3,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: buildMessage(input, language, mode) }],
@@ -287,7 +287,10 @@ async function callClaude(input, language, mode) {
     // Guard: if any optimized field is empty or echoes raw input, use fallback stubs
     const fb = buildFallback(input, language);
     for (const f of ['professionalPrompt', 'shortOptimizedPrompt', 'detailedOptimizedPrompt', 'stablerRewrite']) {
-      if (!result[f] || result[f] === input) result[f] = fb[f];
+      if (result[f] === input) {
+        console.warn('[claude] guard: field echoed raw input — using fallback stub', f);
+        result[f] = fb[f];
+      }
     }
     return result;
   }
